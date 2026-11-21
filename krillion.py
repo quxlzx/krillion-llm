@@ -53,7 +53,8 @@ def curl(url, data=None):
     if data is not None:
         cmd += ["-X", "POST", "--data", json.dumps(data)]
     cmd.append(url)
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    r = subprocess.run(cmd, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
     if r.returncode != 0:
         raise RuntimeError(f"curl failed: {r.stderr.strip()[:200]}")
     try:
@@ -365,6 +366,11 @@ def cmd_post(st, webhook, date=None):
 
 
 def main(argv):
+    # prompts contain UTF-8 (curly quotes); Windows consoles default to cp1252
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
     cmd = argv[1] if len(argv) > 1 else "status"
     st = _load()
     if cmd == "status":
